@@ -1,0 +1,7 @@
+python,
+# go
+# rust
+# backend
+# разработчик
+junior
+# flask

@@ -36,24 +36,45 @@ def get_page_num(url):
 
 class JobInfo():
     def __init__(self, html_code):
+        self.link = html_code.find("a")["href"]
         self.title = html_code.find("a").text
-        self.company = html_code.find("div", {"class" : "vacancy-serp-item__meta-info-company"}).find("a").text
+        self.company = html_code.find("div", {"class" : "vacancy-serp-item__meta-info-company"})
+        self.company = self.company.text.strip()
+        self.address = html_code.find("div",  {"data-qa" : "vacancy-serp__vacancy-address"}).text
+        self.salary = html_code.find("span", {"data-qa" : "vacancy-serp__vacancy-compensation"})
+        if self.salary is not None:
+            self.salary = self.salary.text
 
 def extract_jobs(url, num_pages):
     jobs = []
     for page in range(num_pages):
+        print(f"***\nparse page {page}\n")
         response = requests.get(f"{url}&page={page}", headers=HEADERS)
         print(response)
         soup = BeautifulSoup(response.text, "html.parser")
         results = soup.find_all("div", {"class" : "serp-item"})
-        # print(results)
+
         for result in results:
             job_info = JobInfo(result)
-            print(job_info.title)
-            print(job_info.company)
-            print()
+            jobs.append({
+                "title" : job_info.title,
+                "company" : job_info.company,
+                "city" : job_info.address.split(",")[0],
+                "salary" : job_info.salary,
+                "link" : job_info.link,
+            })
+            ### page response
+            print(job_info.link)
+            page_response = requests.get(f"{job_info.link}", headers=HEADERS)
+            print(page_response)
+            page_soup = BeautifulSoup(page_response.text, "html.parser")
+            page_results = page_soup.find_all("div", {"class" : "vacancy-description"})
+            print(f"{page_results = }")
+            break
+
 
         break
+
     return jobs
 
 
